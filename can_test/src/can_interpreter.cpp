@@ -3,10 +3,10 @@
 #include "can_interface/msg/can_frame.hpp"
 #include <linux/can.h>
 
-class CanTest : public rclcpp::Node 
+class CanInterpreter: public rclcpp::Node 
 {
 public:
-    CanTest() : Node("can_test")
+    CanInterpreter() : Node("can_interpreter")
     {
         sub_ = this->create_subscription<can_interface::msg::CanFrame>(
             "motor_goal", 10, [this](can_interface::msg::CanFrame::SharedPtr msg){
@@ -15,7 +15,7 @@ public:
         can_driver_ = new CanDriver(0);
     }
 
-    ~CanTest()
+    ~CanInterpreter()
     {
         delete can_driver_;
     }
@@ -40,7 +40,7 @@ private:
 int main(int argc, char * argv[])
 {
     rclcpp::init(argc, argv);
-    auto node = std::make_shared<CanTest>();
+    auto node = std::make_shared<CanInterpreter>();
     rclcpp::spin(node);
     rclcpp::shutdown();
     return 0;

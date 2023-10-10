@@ -15,11 +15,15 @@ find_package(can_interface REQUIRED)
 
 include_directories(include)
 
-add_executable(can_test src/can_test.cpp)
-ament_target_dependencies(can_test rclcpp can_interface)
+add_executable(can_interpreter src/can_interpreter.cpp)
+ament_target_dependencies(can_interpreter rclcpp can_interface)
+
+add_executable(can_broadcaster src/can_broadcaster.cpp)
+ament_target_dependencies(can_broadcaster rclcpp can_interface)
 
 install(TARGETS
-  can_test
+  can_broadcaster
+  can_interpreter
   DESTINATION lib/${PROJECT_NAME}
 )
 
