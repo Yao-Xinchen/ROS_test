@@ -8,7 +8,7 @@ public:
     Trigger() : Node("trigger")
     {
         count = 0;
-        timer_ = this->create_wall_timer(std::chrono::milliseconds(100), std::bind(&Trigger::timer_callback, this));
+        timer_ = this->create_wall_timer(std::chrono::milliseconds(2000), std::bind(&Trigger::timer_callback, this));
         pub_ = this->create_publisher<test_interface::msg::GoalInt>("goal_int", 10);
     }
 
@@ -20,8 +20,9 @@ private:
     void timer_callback()
     {
         auto msg = test_interface::msg::GoalInt();
-        msg.goal = 1;
+        msg.goal = count;
         pub_->publish(msg);
+        RCLCPP_INFO(this->get_logger(), "change to: %d", count);
         count++;
     }
 };
@@ -29,7 +30,7 @@ private:
 int main(int argc, char **argv)
 {
     rclcpp::init(argc, argv);
-    auto node = rclcpp::Node::make_shared("trigger");
+    auto node = std::make_shared<Trigger>();
     rclcpp::spin(node);
     rclcpp::shutdown();
     return 0;
