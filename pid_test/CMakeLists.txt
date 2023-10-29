@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(can_interface)
+project(pid_test)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -10,12 +10,22 @@ find_package(ament_cmake REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
-find_package(rosidl_default_generators REQUIRED)
 
-rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/CanFrame.msg"
-  "srv/MotorPresent.srv"
-)
+find_package(rclcpp REQUIRED)
+find_package(can_interface REQUIRED)
+
+include_directories(include)
+
+add_executable(pid_controller src/pid_controller.cpp)
+ament_target_dependencies(pid_controller rclcpp can_interface)
+
+add_executable(pid_feedback src/pid_feedback.cpp)
+ament_target_dependencies(pid_feedback rclcpp can_interface)
+
+install(TARGETS
+  pid_controller
+  pid_feedback
+  DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
