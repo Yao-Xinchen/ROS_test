@@ -13,14 +13,15 @@ find_package(ament_cmake REQUIRED)
 
 find_package(rclcpp REQUIRED)
 find_package(can_interface REQUIRED)
+find_package(test_interface REQUIRED)
 
 include_directories(include)
 
 add_executable(pid_controller src/pid_controller.cpp)
-ament_target_dependencies(pid_controller rclcpp can_interface)
+ament_target_dependencies(pid_controller rclcpp can_interface test_interface)
 
 add_executable(pid_feedback src/pid_feedback.cpp)
-ament_target_dependencies(pid_feedback rclcpp can_interface)
+ament_target_dependencies(pid_feedback rclcpp can_interface test_interface)
 
 install(TARGETS
   pid_controller
