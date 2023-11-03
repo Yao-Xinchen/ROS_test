@@ -23,7 +23,7 @@ public:
     static can_frame rx_frame;
     static CanDriver* can_0;
 
-    MotorDriver();
+    MotorDriver(int id, float v2c[3]);
     
     MotorData process_rx();
 

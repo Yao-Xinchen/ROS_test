@@ -12,7 +12,8 @@ class PidFeedback : public rclcpp::Node
 public:
     PidFeedback() : Node("pid_feedback")
     {
-        motor_driver_ = new MotorDriver();
+        float v2c_params[3] = {0.1, 0.1, 0.1};
+        motor_driver_ = new MotorDriver(2, v2c_params);
         cli_ = this->create_client<can_interface::srv::MotorPresent>("motor_present");
         sub_ = this->create_subscription<test_interface::msg::GoalVel>("goal_vel", 10, std::bind(&PidFeedback::sub_callback, this, std::placeholders::_1));
         timer_ = this->create_wall_timer(std::chrono::milliseconds(10), std::bind(&PidFeedback::timer_callback, this));

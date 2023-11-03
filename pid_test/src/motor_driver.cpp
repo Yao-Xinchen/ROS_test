@@ -5,13 +5,13 @@
 can_frame MotorDriver::rx_frame;
 CanDriver* MotorDriver::can_0 = new CanDriver(0);
 
-MotorDriver::MotorDriver()
+MotorDriver::MotorDriver(int id, float v2c[3])
 {
-    id = 2;
+    this->id = id;
 
-    v2c_kp = 0.1;
-    v2c_ki = 0.1;
-    v2c_kd = 0.1;
+    this->v2c_kp = v2c[0];
+    this->v2c_ki = v2c[1];
+    this->v2c_kd = v2c[2];
 
     proportional = 0;
     integral = 0;

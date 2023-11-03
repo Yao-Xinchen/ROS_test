@@ -12,6 +12,8 @@ class PidFeedback : public rclcpp::Node
 public:
     PidFeedback() : Node("pid_feedback")
     {
+        float v2c_params[3] = {0.1, 0.1, 0.1};
+        motor_driver_ = new MotorDriver(2, v2c_params);
         srv_ = this->create_service<can_interface::srv::MotorPresent>(
             "motor_present", [this](const can_interface::srv::MotorPresent::Request::SharedPtr request,
                                     can_interface::srv::MotorPresent::Response::SharedPtr response){
