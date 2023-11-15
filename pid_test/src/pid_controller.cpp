@@ -20,6 +20,12 @@ public:
         timer_ = this->create_wall_timer(std::chrono::milliseconds(10), std::bind(&PidController::timer_callback, this));
         cli_ = this->create_client<can_interface::srv::MotorPresent>("motor_present");
         wait();
+
+        signal(SIGINT, [](int /*unused*/)
+        {
+            rclcpp::shutdown();
+            // exit(EXIT_SUCCESS);
+        });
     }
 
     ~PidController()
@@ -42,11 +48,22 @@ private:
     {
         auto request = std::make_shared<can_interface::srv::MotorPresent::Request>();
         auto response = cli_->async_send_request(request);
-        auto result = response.get();
+        // auto result = response.get();
+        // RCLCPP_INFO(this->get_logger(), "Response received.");
+        // motor_driver_->update_vel(result->present_vel);
+        // motor_driver_->write_frame(MotorDriver::tx_frame);
+        // MotorDriver::send_frame(MotorDriver::tx_frame);
 
-        motor_driver_->update_vel(result->present_vel);
-        motor_driver_->write_frame(MotorDriver::tx_frame);
-        MotorDriver::send_frame(MotorDriver::tx_frame);
+        if (rclcpp::spin_until_future_complete(this->get_node_base_interface(), response) == rclcpp::FutureReturnCode::SUCCESS)
+        {
+            RCLCPP_INFO(this->get_logger(), "Response received.");
+            motor_driver_->update_vel(response.get()->present_vel);
+            // TODO: process rx should be called in timer_callback
+            motor_driver_->write_frame(MotorDriver::tx_frame);
+            MotorDriver::send_frame(MotorDriver::tx_frame);
+        } else {
+            RCLCPP_ERROR(this->get_logger(), "Failed to call service motor_present");
+        }
     }
 
     void frame_init()

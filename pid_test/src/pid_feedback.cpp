@@ -19,6 +19,7 @@ public:
                                     can_interface::srv::MotorPresent::Response::SharedPtr response){
                 this->srv_callback(response);
             });
+        RCLCPP_INFO(this->get_logger(), "Ready to feedback motor present data.");
         timer_ = this->create_wall_timer(std::chrono::milliseconds(10), std::bind(&PidFeedback::timer_callback, this));
     }
 
@@ -31,6 +32,7 @@ private:
 
     void srv_callback(can_interface::srv::MotorPresent::Response::SharedPtr response)
     {
+        RCLCPP_INFO(this->get_logger(), "Request received.");
         response->present_pos = present_data.position;
         response->present_vel = present_data.velocity;
         response->present_tor = present_data.torque;
