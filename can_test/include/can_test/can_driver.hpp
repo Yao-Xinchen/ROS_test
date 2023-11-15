@@ -40,10 +40,15 @@ public:
         close(s);
     }
 
+    void get_frame(can_frame &frame)
+    {
+        read(s, &frame, sizeof(frame));
+    }
+
     void send_frame(can_frame frame)
     {
         write(s, &frame, sizeof(frame));
     }
 };
 
-#endif // CAN_DRIVER_HPP
+#endif // CAN_DRIVER_H

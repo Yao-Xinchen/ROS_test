@@ -21,6 +21,9 @@ ament_target_dependencies(can_interpreter rclcpp can_interface)
 add_executable(can_broadcaster src/can_broadcaster.cpp)
 ament_target_dependencies(can_broadcaster rclcpp can_interface)
 
+add_executable(can_feedback src/can_feedback.cpp)
+ament_target_dependencies(can_feedback rclcpp can_interface)
+
 install(TARGETS
   can_broadcaster
   can_interpreter
