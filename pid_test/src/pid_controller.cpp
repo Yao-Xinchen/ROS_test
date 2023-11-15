@@ -6,17 +6,25 @@
 
 #include "can_interface/srv/motor_present.hpp"
 #include "test_interface/msg/goal_vel.hpp"
+#include <cstdlib>
 
-class PidFeedback : public rclcpp::Node
+class PidController : public rclcpp::Node
 {
 public:
-    PidFeedback() : Node("pid_feedback")
+    PidController() : Node("pid_controller")
     {
         float v2c_params[3] = {0.1, 0.1, 0.1};
         motor_driver_ = new MotorDriver(2, v2c_params);
+        frame_init();
+        sub_ = this->create_subscription<test_interface::msg::GoalVel>("goal_vel", 10, std::bind(&PidController::sub_callback, this, std::placeholders::_1));
+        timer_ = this->create_wall_timer(std::chrono::milliseconds(10), std::bind(&PidController::timer_callback, this));
         cli_ = this->create_client<can_interface::srv::MotorPresent>("motor_present");
-        sub_ = this->create_subscription<test_interface::msg::GoalVel>("goal_vel", 10, std::bind(&PidFeedback::sub_callback, this, std::placeholders::_1));
-        timer_ = this->create_wall_timer(std::chrono::milliseconds(10), std::bind(&PidFeedback::timer_callback, this));
+        wait();
+    }
+
+    ~PidController()
+    {
+        delete motor_driver_;
     }
 
 private:
@@ -47,12 +55,24 @@ private:
         MotorDriver::tx_frame.can_dlc = 8;
         for (int i = 0; i < 8; i++) MotorDriver::tx_frame.data[i] = 0x00;
     }
+
+    void wait()
+    {
+        while (!cli_->wait_for_service(std::chrono::seconds(1))) {
+            if (!rclcpp::ok()) {
+                RCLCPP_ERROR(this->get_logger(), "Interrupted while waiting for the service. Exiting.");
+                // exit the main
+                exit(EXIT_SUCCESS);
+            }
+            RCLCPP_INFO(this->get_logger(), "service not available, waiting again...");
+        }
+    }
 };
 
-int main(int argc, char *argv[])
+int main(int argc, char **argv)
 {
     rclcpp::init(argc, argv);
-    auto node = rclcpp::Node::make_shared("pid_feedback");
+    auto node = std::make_shared<PidController>();
     rclcpp::spin(node);
     rclcpp::shutdown();
     return 0;

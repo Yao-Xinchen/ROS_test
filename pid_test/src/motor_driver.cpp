@@ -2,6 +2,7 @@
 #include "pid_test/motor_data.hpp"
 #include <linux/can.h>
 
+can_frame MotorDriver::tx_frame;
 can_frame MotorDriver::rx_frame;
 CanDriver* MotorDriver::can_0 = new CanDriver(0);
 

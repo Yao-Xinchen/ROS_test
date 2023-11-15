@@ -27,6 +27,7 @@ ament_target_dependencies(can_feedback rclcpp can_interface)
 install(TARGETS
   can_broadcaster
   can_interpreter
+  can_feedback
   DESTINATION lib/${PROJECT_NAME}
 )
 

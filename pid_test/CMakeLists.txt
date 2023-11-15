@@ -17,10 +17,10 @@ find_package(test_interface REQUIRED)
 
 include_directories(include)
 
-add_executable(pid_controller src/pid_controller.cpp)
+add_executable(pid_controller src/pid_controller.cpp src/motor_driver.cpp)
 ament_target_dependencies(pid_controller rclcpp can_interface test_interface)
 
-add_executable(pid_feedback src/pid_feedback.cpp)
+add_executable(pid_feedback src/pid_feedback.cpp src/motor_driver.cpp)
 ament_target_dependencies(pid_feedback rclcpp can_interface test_interface)
 
 install(TARGETS
