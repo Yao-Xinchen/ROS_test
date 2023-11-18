@@ -17,9 +17,9 @@ public:
         motor_driver_ = new MotorDriver(2, v2c_params);
         frame_init();
         sub_ = this->create_subscription<test_interface::msg::GoalVel>("goal_vel", 10, std::bind(&PidController::sub_callback, this, std::placeholders::_1));
-        timer_ = this->create_wall_timer(std::chrono::milliseconds(10), std::bind(&PidController::timer_callback, this));
         cli_ = this->create_client<can_interface::srv::MotorPresent>("motor_present");
         wait();
+        timer_ = this->create_wall_timer(std::chrono::milliseconds(10), std::bind(&PidController::timer_callback, this));
 
         signal(SIGINT, [](int /*unused*/)
         {
@@ -48,6 +48,7 @@ private:
     {
         auto request = std::make_shared<can_interface::srv::MotorPresent::Request>();
         auto response = cli_->async_send_request(request);
+        RCLCPP_INFO(this->get_logger(), "Request sent.");
         // auto result = response.get();
         // RCLCPP_INFO(this->get_logger(), "Response received.");
         // motor_driver_->update_vel(result->present_vel);
@@ -58,7 +59,6 @@ private:
         {
             RCLCPP_INFO(this->get_logger(), "Response received.");
             motor_driver_->update_vel(response.get()->present_vel);
-            // TODO: process rx should be called in timer_callback
             motor_driver_->write_frame(MotorDriver::tx_frame);
             MotorDriver::send_frame(MotorDriver::tx_frame);
         } else {

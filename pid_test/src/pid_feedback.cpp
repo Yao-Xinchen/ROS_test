@@ -4,6 +4,7 @@
 #include "pid_test/motor_driver.hpp"
 
 #include "can_interface/srv/motor_present.hpp"
+#include <rclcpp/logging.hpp>
 
 #define DT 10
 
@@ -42,6 +43,7 @@ private:
     {
         MotorDriver::can_0->get_frame(MotorDriver::rx_frame);
         present_data = motor_driver_->process_rx();
+        RCLCPP_INFO(this->get_logger(), "Position: %f, Velocity: %f, Torque: %f", present_data.position, present_data.velocity, present_data.torque);
     }
 };
 
