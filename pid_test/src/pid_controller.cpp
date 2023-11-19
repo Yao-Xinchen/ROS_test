@@ -7,6 +7,7 @@
 #include "can_interface/srv/motor_present.hpp"
 #include "test_interface/msg/goal_vel.hpp"
 #include <cstdlib>
+#include <rclcpp/logging.hpp>
 
 class PidController : public rclcpp::Node
 {
@@ -21,11 +22,11 @@ public:
         wait();
         timer_ = this->create_wall_timer(std::chrono::milliseconds(10), std::bind(&PidController::timer_callback, this));
 
-        signal(SIGINT, [](int /*unused*/)
-        {
-            rclcpp::shutdown();
-            // exit(EXIT_SUCCESS);
-        });
+        // signal(SIGINT, [](int /*unused*/)
+        // {
+        //     rclcpp::shutdown();
+        //     // exit(EXIT_SUCCESS);
+        // });
     }
 
     ~PidController()
@@ -47,23 +48,16 @@ private:
     void timer_callback()
     {
         auto request = std::make_shared<can_interface::srv::MotorPresent::Request>();
-        auto response = cli_->async_send_request(request);
+        auto result = cli_->async_send_request(request);
         RCLCPP_INFO(this->get_logger(), "Request sent.");
-        // auto result = response.get();
-        // RCLCPP_INFO(this->get_logger(), "Response received.");
-        // motor_driver_->update_vel(result->present_vel);
-        // motor_driver_->write_frame(MotorDriver::tx_frame);
-        // MotorDriver::send_frame(MotorDriver::tx_frame);
+        
+        auto vel = result.get()->present_pos;
+        RCLCPP_INFO(this->get_logger(), "Response received.");
+        motor_driver_->update_vel(vel);
+        motor_driver_->write_frame(MotorDriver::tx_frame);
 
-        if (rclcpp::spin_until_future_complete(this->get_node_base_interface(), response) == rclcpp::FutureReturnCode::SUCCESS)
-        {
-            RCLCPP_INFO(this->get_logger(), "Response received.");
-            motor_driver_->update_vel(response.get()->present_vel);
-            motor_driver_->write_frame(MotorDriver::tx_frame);
-            MotorDriver::send_frame(MotorDriver::tx_frame);
-        } else {
-            RCLCPP_ERROR(this->get_logger(), "Failed to call service motor_present");
-        }
+        MotorDriver::send_frame(MotorDriver::tx_frame);
+        RCLCPP_INFO(this->get_logger(), "Frame sent.");
     }
 
     void frame_init()
@@ -78,8 +72,9 @@ private:
         while (!cli_->wait_for_service(std::chrono::seconds(1))) {
             if (!rclcpp::ok()) {
                 RCLCPP_ERROR(this->get_logger(), "Interrupted while waiting for the service. Exiting.");
-                // exit the main
-                exit(EXIT_SUCCESS);
+                // // exit the main
+                // exit(EXIT_SUCCESS);
+                rclcpp::shutdown();
             }
             RCLCPP_INFO(this->get_logger(), "service not available, waiting again...");
         }
