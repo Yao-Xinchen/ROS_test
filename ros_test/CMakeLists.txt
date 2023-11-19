@@ -24,16 +24,25 @@ find_package(ament_cmake REQUIRED)
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(example_interfaces REQUIRED)
+find_package(test_interface REQUIRED)
 
-add_executable(server src/add_two_ints_server.cpp)
-ament_target_dependencies(server rclcpp example_interfaces)
+add_executable(add_server src/add_two_ints_server.cpp)
+ament_target_dependencies(add_server rclcpp example_interfaces)
 
-add_executable(client src/add_two_ints_client.cpp)
-ament_target_dependencies(client rclcpp example_interfaces)
+add_executable(add_client src/add_two_ints_client.cpp)
+ament_target_dependencies(add_client rclcpp example_interfaces)
+
+add_executable(basic_server src/basic_server.cpp)
+ament_target_dependencies(basic_server rclcpp test_interface)
+
+add_executable(basic_client src/basic_client.cpp)
+ament_target_dependencies(basic_client rclcpp test_interface)
 
 install(TARGETS
-  server
-  client
+  add_server
+  add_client
+  basic_server
+  basic_client
   DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
