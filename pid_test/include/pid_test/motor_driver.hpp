@@ -10,11 +10,9 @@
 
 #include "motor_data.hpp"
 
-#define POS_MAX 360 // degree
-#define VEL_MAX 10000 // rpm, not sure
-#define TOR_MAX 20 // actually current, A
-
-#define DT 10
+#define ENCODER_ANGLE_RATIO 360.0f / 8192.0f
+#define REDUCE_RATIO 36.0f
+#define DT 1
 
 class MotorDriver
 {
@@ -23,26 +21,21 @@ public:
     static can_frame rx_frame;
     static CanDriver* can_0;
 
-    MotorDriver(int id, float v2c[3]);
+    MotorDriver(int id, float v2c[2]);
     
     MotorData process_rx();
-
-    float raw2actual(uint16_t raw, float actual_max, uint8_t bits);
 
     void set_goal(float vel);
     void update_vel(float vel);
 
-    void write_frame(can_frame &tx_frame);
+    float write_frame(can_frame &tx_frame);
     static void send_frame(can_frame &tx_frame);
-
-    static float uint_to_float(int x_int, float x_min, float x_max, int bits);
-    static int float_to_uint(float x, float x_min, float x_max, int bits);
     
 private:
     int id;
 
-    float v2c_kp, v2c_ki, v2c_kd;
-    float proportional, integral, derivative;
+    float v2c_kp, v2c_ki;
+    float proportional, integral;
 
     float present_pos;
     float present_vel;
@@ -50,7 +43,6 @@ private:
     float goal_vel;
     float current;
     float vel_error;
-    float pos_error;
 
     float vel2current(float goal_vel);
 };
