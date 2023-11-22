@@ -6,18 +6,16 @@
 #include "can_interface/srv/motor_present.hpp"
 #include <rclcpp/logging.hpp>
 
-#define DT 10
-
 class PidFeedback : public rclcpp::Node
 {
 public:
     PidFeedback() : Node("pid_feedback")
     {
-        float v2c_params[3] = {0.1, 0.1, 0.1};
+        float v2c_params[2] = {10, 0.1};
         motor_driver_ = new MotorDriver(2, v2c_params);
         srv_ = this->create_service<can_interface::srv::MotorPresent>("motor_present", std::bind(&PidFeedback::srv_callback, this, std::placeholders::_1, std::placeholders::_2));
         RCLCPP_INFO(this->get_logger(), "Ready to feedback motor present data.");
-        timer_ = this->create_wall_timer(std::chrono::milliseconds(10), std::bind(&PidFeedback::timer_callback, this));
+        timer_ = this->create_wall_timer(std::chrono::milliseconds(DT), std::bind(&PidFeedback::timer_callback, this));
     }
 
 private:
@@ -30,18 +28,16 @@ private:
     void srv_callback(const can_interface::srv::MotorPresent::Request::SharedPtr request,
                       can_interface::srv::MotorPresent::Response::SharedPtr response)
     {
-        RCLCPP_INFO(this->get_logger(), "Request received.");
         response->present_pos = present_data.position;
         response->present_vel = present_data.velocity;
         response->present_tor = present_data.torque;
-        RCLCPP_INFO(this->get_logger(), "Response sent.");
     }
 
     void timer_callback()
     {
         MotorDriver::can_0->get_frame(MotorDriver::rx_frame);
         present_data = motor_driver_->process_rx();
-        // RCLCPP_INFO(this->get_logger(), "Position: %f, Velocity: %f, Torque: %f", present_data.position, present_data.velocity, present_data.torque);
+        RCLCPP_INFO(this->get_logger(), "Position: %f, Velocity: %f, Torque: %f", present_data.position, present_data.velocity, present_data.torque);
     }
 };
 

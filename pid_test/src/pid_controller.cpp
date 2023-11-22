@@ -15,13 +15,13 @@ class PidController : public rclcpp::Node
 public:
     PidController() : Node("pid_controller")
     {
-        float v2c_params[3] = {0.1, 0.1, 0.1};
+        float v2c_params[2] = {10, 0.1};
         motor_driver_ = new MotorDriver(2, v2c_params);
         frame_init();
         cb_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
         cli_ = this->create_client<can_interface::srv::MotorPresent>("motor_present");
         wait();
-        timer_ = this->create_wall_timer(std::chrono::milliseconds(10), std::bind(&PidController::timer_callback, this));
+        timer_ = this->create_wall_timer(std::chrono::milliseconds(DT), std::bind(&PidController::timer_callback, this));
         sub_ = this->create_subscription<test_interface::msg::GoalVel>("goal_vel", 10, std::bind(&PidController::sub_callback, this, std::placeholders::_1));
     }
 
@@ -49,9 +49,9 @@ private:
         {
             auto result = inner_future.get();
             motor_driver_->update_vel(result->present_vel);
-            motor_driver_->write_frame(MotorDriver::tx_frame);
+            float cur = motor_driver_->write_frame(MotorDriver::tx_frame);
             MotorDriver::send_frame(MotorDriver::tx_frame);
-            RCLCPP_INFO(this->get_logger(), "Frame sent.");
+            RCLCPP_INFO(this->get_logger(), "Current: %f", cur);
         };
         auto future_result = cli_->async_send_request(request, cli_callback);
     }
