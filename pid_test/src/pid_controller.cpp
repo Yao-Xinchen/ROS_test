@@ -7,6 +7,7 @@
 #include "can_interface/srv/motor_present.hpp"
 #include "test_interface/msg/goal_vel.hpp"
 #include <cstdlib>
+#include <rclcpp/callback_group.hpp>
 #include <rclcpp/logging.hpp>
 
 class PidController : public rclcpp::Node
@@ -17,16 +18,11 @@ public:
         float v2c_params[3] = {0.1, 0.1, 0.1};
         motor_driver_ = new MotorDriver(2, v2c_params);
         frame_init();
-        sub_ = this->create_subscription<test_interface::msg::GoalVel>("goal_vel", 10, std::bind(&PidController::sub_callback, this, std::placeholders::_1));
+        cb_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
         cli_ = this->create_client<can_interface::srv::MotorPresent>("motor_present");
         wait();
         timer_ = this->create_wall_timer(std::chrono::milliseconds(10), std::bind(&PidController::timer_callback, this));
-
-        // signal(SIGINT, [](int /*unused*/)
-        // {
-        //     rclcpp::shutdown();
-        //     // exit(EXIT_SUCCESS);
-        // });
+        sub_ = this->create_subscription<test_interface::msg::GoalVel>("goal_vel", 10, std::bind(&PidController::sub_callback, this, std::placeholders::_1));
     }
 
     ~PidController()
@@ -38,6 +34,7 @@ private:
     rclcpp::TimerBase::SharedPtr timer_;
     rclcpp::Client<can_interface::srv::MotorPresent>::SharedPtr cli_;
     rclcpp::Subscription<test_interface::msg::GoalVel>::SharedPtr sub_;
+    rclcpp::CallbackGroup::SharedPtr cb_group_;
     MotorDriver* motor_driver_;
 
     void sub_callback(const test_interface::msg::GoalVel::SharedPtr msg)
@@ -48,16 +45,15 @@ private:
     void timer_callback()
     {
         auto request = std::make_shared<can_interface::srv::MotorPresent::Request>();
-        auto result = cli_->async_send_request(request);
-        RCLCPP_INFO(this->get_logger(), "Request sent.");
-        
-        auto vel = result.get()->present_pos;
-        RCLCPP_INFO(this->get_logger(), "Response received.");
-        motor_driver_->update_vel(vel);
-        motor_driver_->write_frame(MotorDriver::tx_frame);
-
-        MotorDriver::send_frame(MotorDriver::tx_frame);
-        RCLCPP_INFO(this->get_logger(), "Frame sent.");
+        auto cli_callback = [&, this](rclcpp::Client<can_interface::srv::MotorPresent>::SharedFuture inner_future)
+        {
+            auto result = inner_future.get();
+            motor_driver_->update_vel(result->present_vel);
+            motor_driver_->write_frame(MotorDriver::tx_frame);
+            MotorDriver::send_frame(MotorDriver::tx_frame);
+            RCLCPP_INFO(this->get_logger(), "Frame sent.");
+        };
+        auto future_result = cli_->async_send_request(request, cli_callback);
     }
 
     void frame_init()
@@ -72,8 +68,6 @@ private:
         while (!cli_->wait_for_service(std::chrono::seconds(1))) {
             if (!rclcpp::ok()) {
                 RCLCPP_ERROR(this->get_logger(), "Interrupted while waiting for the service. Exiting.");
-                // // exit the main
-                // exit(EXIT_SUCCESS);
                 rclcpp::shutdown();
             }
             RCLCPP_INFO(this->get_logger(), "service not available, waiting again...");
