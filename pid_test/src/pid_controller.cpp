@@ -48,10 +48,11 @@ private:
         auto cli_callback = [&, this](rclcpp::Client<can_interface::srv::MotorPresent>::SharedFuture inner_future)
         {
             auto result = inner_future.get();
+            RCLCPP_INFO(this->get_logger(), "Position: %f, Velocity: %f, Torque: %f", result->present_pos, result->present_vel, result->present_tor);
             motor_driver_->update_vel(result->present_vel);
             float cur = motor_driver_->write_frame(MotorDriver::tx_frame);
             MotorDriver::send_frame(MotorDriver::tx_frame);
-            RCLCPP_INFO(this->get_logger(), "Current: %f", cur);
+            // RCLCPP_INFO(this->get_logger(), "Current: %f", cur);
         };
         auto future_result = cli_->async_send_request(request, cli_callback);
     }

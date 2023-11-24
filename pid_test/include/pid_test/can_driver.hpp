@@ -1,6 +1,7 @@
 #ifndef CAN_DRIVER_HPP
 #define CAN_DRIVER_HPP
 
+#include <cstdio>
 #include <linux/can.h>
 #include <linux/can/raw.h>
 #include <sys/socket.h>

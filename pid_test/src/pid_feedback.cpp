@@ -15,7 +15,7 @@ public:
         motor_driver_ = new MotorDriver(2, v2c_params);
         srv_ = this->create_service<can_interface::srv::MotorPresent>("motor_present", std::bind(&PidFeedback::srv_callback, this, std::placeholders::_1, std::placeholders::_2));
         RCLCPP_INFO(this->get_logger(), "Ready to feedback motor present data.");
-        timer_ = this->create_wall_timer(std::chrono::milliseconds(DT), std::bind(&PidFeedback::timer_callback, this));
+        timer_ = this->create_wall_timer(std::chrono::milliseconds(10), std::bind(&PidFeedback::timer_callback, this));
     }
 
 private:
@@ -37,7 +37,7 @@ private:
     {
         MotorDriver::can_0->get_frame(MotorDriver::rx_frame);
         present_data = motor_driver_->process_rx();
-        RCLCPP_INFO(this->get_logger(), "Position: %f, Velocity: %f, Torque: %f", present_data.position, present_data.velocity, present_data.torque);
+        // RCLCPP_INFO(this->get_logger(), "Position: %f, Velocity: %f, Torque: %f", present_data.position, present_data.velocity, present_data.torque);
     }
 };
 

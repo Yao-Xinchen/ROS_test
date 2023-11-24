@@ -68,7 +68,7 @@ MotorData MotorDriver::process_rx()
     uint16_t vel_raw = rx_frame.data[2]<<8 | rx_frame.data[3];
     uint16_t tor_raw = rx_frame.data[4]<<8 | rx_frame.data[5];
 
-    present_data.position = (float)pos_raw * ENCODER_ANGLE_RATIO / REDUCE_RATIO;
+    present_data.position = (float)pos_raw * ENCODER_ANGLE_RATIO;
     present_data.velocity = (float)vel_raw * 3.1415926f / 30.0f / REDUCE_RATIO; // rpm to rad/s, 2*pi/60
     present_data.torque = (float)tor_raw; // actually current, Ampere
 
