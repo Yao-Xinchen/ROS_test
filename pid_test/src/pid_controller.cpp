@@ -4,11 +4,10 @@
 #include "pid_test/motor_data.hpp"
 #include "pid_test/motor_driver.hpp"
 
-#include "can_interface/srv/motor_present.hpp"
+#include <can_interface/msg/motor_present.hpp>
 #include "test_interface/msg/goal_vel.hpp"
-#include <cstdlib>
-#include <rclcpp/callback_group.hpp>
-#include <rclcpp/logging.hpp>
+
+#define CONTROL_RATE 1 // 1ms
 
 class PidController : public rclcpp::Node
 {
@@ -18,11 +17,9 @@ public:
         float v2c_params[2] = {10, 0.1};
         motor_driver_ = new MotorDriver(2, v2c_params);
         frame_init();
-        cb_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-        cli_ = this->create_client<can_interface::srv::MotorPresent>("motor_present");
-        wait();
-        timer_ = this->create_wall_timer(std::chrono::milliseconds(DT), std::bind(&PidController::timer_callback, this));
-        sub_ = this->create_subscription<test_interface::msg::GoalVel>("goal_vel", 10, std::bind(&PidController::sub_callback, this, std::placeholders::_1));
+        timer_ = this->create_wall_timer(std::chrono::milliseconds(1), std::bind(&PidController::timer_callback, this));
+        goal_sub_ = this->create_subscription<test_interface::msg::GoalVel>("goal_vel", 10, std::bind(&PidController::goal_sub_callback, this, std::placeholders::_1));
+        feedback_sub_ = this->create_subscription<can_interface::msg::MotorPresent>("motor_present", 10, std::bind(&PidController::feedback_sub_callback, this, std::placeholders::_1));
     }
 
     ~PidController()
@@ -31,30 +28,25 @@ public:
     }
 
 private:
-    rclcpp::TimerBase::SharedPtr timer_;
-    rclcpp::Client<can_interface::srv::MotorPresent>::SharedPtr cli_;
-    rclcpp::Subscription<test_interface::msg::GoalVel>::SharedPtr sub_;
-    rclcpp::CallbackGroup::SharedPtr cb_group_;
+    rclcpp::TimerBase::SharedPtr timer_; // send control frame regularly
+    rclcpp::Subscription<test_interface::msg::GoalVel>::SharedPtr goal_sub_; // receive goal velocity
+    rclcpp::Subscription<can_interface::msg::MotorPresent>::SharedPtr feedback_sub_; // update local data
     MotorDriver* motor_driver_;
 
-    void sub_callback(const test_interface::msg::GoalVel::SharedPtr msg)
+    void goal_sub_callback(const test_interface::msg::GoalVel::SharedPtr msg)
     {
         motor_driver_->set_goal(msg->vel);
     }
 
+    void feedback_sub_callback(const can_interface::msg::MotorPresent::SharedPtr msg)
+    {
+        motor_driver_->update_vel(msg->present_vel);
+    }
+
     void timer_callback()
     {
-        auto request = std::make_shared<can_interface::srv::MotorPresent::Request>();
-        auto cli_callback = [&, this](rclcpp::Client<can_interface::srv::MotorPresent>::SharedFuture inner_future)
-        {
-            auto result = inner_future.get();
-            RCLCPP_INFO(this->get_logger(), "Position: %f, Velocity: %f, Torque: %f", result->present_pos, result->present_vel, result->present_tor);
-            motor_driver_->update_vel(result->present_vel);
-            float cur = motor_driver_->write_frame(MotorDriver::tx_frame);
-            MotorDriver::send_frame(MotorDriver::tx_frame);
-            // RCLCPP_INFO(this->get_logger(), "Current: %f", cur);
-        };
-        auto future_result = cli_->async_send_request(request, cli_callback);
+        motor_driver_->write_frame(MotorDriver::tx_frame);
+        MotorDriver::send_frame(MotorDriver::tx_frame);
     }
 
     void frame_init()
@@ -62,17 +54,6 @@ private:
         MotorDriver::tx_frame.can_id = 0x200;
         MotorDriver::tx_frame.can_dlc = 8;
         for (int i = 0; i < 8; i++) MotorDriver::tx_frame.data[i] = 0x00;
-    }
-
-    void wait()
-    {
-        while (!cli_->wait_for_service(std::chrono::seconds(1))) {
-            if (!rclcpp::ok()) {
-                RCLCPP_ERROR(this->get_logger(), "Interrupted while waiting for the service. Exiting.");
-                rclcpp::shutdown();
-            }
-            RCLCPP_INFO(this->get_logger(), "service not available, waiting again...");
-        }
     }
 };
 
