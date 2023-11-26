@@ -46,7 +46,7 @@ public:
         read(s, &frame, sizeof(frame));
     }
 
-    void send_frame(can_frame frame)
+    void send_frame(const can_frame frame)
     {
         write(s, &frame, sizeof(frame));
     }

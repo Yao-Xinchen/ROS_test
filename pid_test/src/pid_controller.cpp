@@ -7,17 +7,15 @@
 #include <can_interface/msg/motor_present.hpp>
 #include "test_interface/msg/goal_vel.hpp"
 
-#define CONTROL_RATE 1 // 1ms
-
 class PidController : public rclcpp::Node
 {
 public:
     PidController() : Node("pid_controller")
     {
-        float v2c_params[2] = {10, 0.1};
+        float v2c_params[2] = {0.1, 0.1};
         motor_driver_ = new MotorDriver(2, v2c_params);
         frame_init();
-        timer_ = this->create_wall_timer(std::chrono::milliseconds(1), std::bind(&PidController::timer_callback, this));
+        timer_ = this->create_wall_timer(std::chrono::milliseconds(CONTROL_R), std::bind(&PidController::timer_callback, this));
         goal_sub_ = this->create_subscription<test_interface::msg::GoalVel>("goal_vel", 10, std::bind(&PidController::goal_sub_callback, this, std::placeholders::_1));
         feedback_sub_ = this->create_subscription<can_interface::msg::MotorPresent>("motor_present", 10, std::bind(&PidController::feedback_sub_callback, this, std::placeholders::_1));
     }
@@ -45,8 +43,13 @@ private:
 
     void timer_callback()
     {
+
         motor_driver_->write_frame(MotorDriver::tx_frame);
         MotorDriver::send_frame(MotorDriver::tx_frame);
+        // RCLCPP_INFO(this->get_logger(), "Present_vel: %f", motor_driver_->present_vel);
+        // RCLCPP_INFO(this->get_logger(), "Current_data: %d", data);
+        // RCLCPP_INFO(this->get_logger(), "Current: %f", current);
+        // RCLCPP_INFO(this->get_logger(), "tx_frame[2] = %d, tx_frame[3] = %d", MotorDriver::tx_frame.data[2], MotorDriver::tx_frame.data[3]);
     }
 
     void frame_init()

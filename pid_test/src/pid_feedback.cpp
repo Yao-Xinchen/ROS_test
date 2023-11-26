@@ -4,10 +4,6 @@
 #include "pid_test/motor_driver.hpp"
 
 #include "can_interface/msg/motor_present.hpp"
-#include <can_interface/msg/detail/motor_present__struct.hpp>
-#include <rclcpp/publisher.hpp>
-
-#define PUB_RATE 1 // 1ms 
 
 class PidFeedback : public rclcpp::Node
 {
@@ -16,7 +12,7 @@ public:
     {
         float v2c_params[2] = {10, 0.1};
         motor_driver_ = new MotorDriver(2, v2c_params);
-        timer_ = this->create_wall_timer(std::chrono::milliseconds(PUB_RATE), std::bind(&PidFeedback::timer_callback, this));
+        timer_ = this->create_wall_timer(std::chrono::milliseconds(FEEDBACK_R), std::bind(&PidFeedback::timer_callback, this));
         pub_ = this->create_publisher<can_interface::msg::MotorPresent>("motor_present", 10);
     }
 
