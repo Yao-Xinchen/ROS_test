@@ -41,9 +41,8 @@ float MotorDriver::vel2current(const float goal_vel)
     proportional = v2c_kp * vel_error;
     integral += v2c_ki * vel_error * CONTROL_R;
 
-    // current = proportional + integral;
-    printf("proportional: %f, present_vel: %f, goal_vel: %f, current: %f\n", proportional, present_vel, goal_vel, current);
-    current = proportional;
+    current = proportional + integral;
+    // current = proportional;
 
     return current;
 }
@@ -53,6 +52,7 @@ float MotorDriver::write_frame(can_frame &tx_frame)
     current = vel2current(goal_vel);
     if (current > 20) current = 20;
     else if (current < -20) current = -20;
+    printf("proportional: %f, present_vel: %f, goal_vel: %f, current: %f\n", proportional, present_vel, goal_vel, current);
 
     int16_t current_data = current / 20 * 16384; // int16_t !!! not uint16_t
 

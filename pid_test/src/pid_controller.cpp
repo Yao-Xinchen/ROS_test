@@ -5,6 +5,7 @@
 #include "pid_test/motor_driver.hpp"
 
 #include <can_interface/msg/motor_present.hpp>
+#include <rclcpp/timer.hpp>
 #include "test_interface/msg/goal_vel.hpp"
 
 class PidController : public rclcpp::Node
@@ -12,12 +13,12 @@ class PidController : public rclcpp::Node
 public:
     PidController() : Node("pid_controller")
     {
-        float v2c_params[2] = {0.1, 0.1};
+        float v2c_params[2] = {0.05, 0.01};
         motor_driver_ = new MotorDriver(2, v2c_params);
         frame_init();
-        timer_ = this->create_wall_timer(std::chrono::milliseconds(CONTROL_R), std::bind(&PidController::timer_callback, this));
+        control_timer_ = this->create_wall_timer(std::chrono::milliseconds(CONTROL_R), std::bind(&PidController::control_timer_callback, this));
+        feedback_timer_ = this->create_wall_timer(std::chrono::milliseconds(FEEDBACK_R), std::bind(&PidController::feedback_timer_callback, this));
         goal_sub_ = this->create_subscription<test_interface::msg::GoalVel>("goal_vel", 10, std::bind(&PidController::goal_sub_callback, this, std::placeholders::_1));
-        feedback_sub_ = this->create_subscription<can_interface::msg::MotorPresent>("motor_present", 10, std::bind(&PidController::feedback_sub_callback, this, std::placeholders::_1));
     }
 
     ~PidController()
@@ -26,9 +27,9 @@ public:
     }
 
 private:
-    rclcpp::TimerBase::SharedPtr timer_; // send control frame regularly
+    rclcpp::TimerBase::SharedPtr control_timer_; // send control frame regularly
+    rclcpp::TimerBase::SharedPtr feedback_timer_; // receive feedback frame regularly
     rclcpp::Subscription<test_interface::msg::GoalVel>::SharedPtr goal_sub_; // receive goal velocity
-    rclcpp::Subscription<can_interface::msg::MotorPresent>::SharedPtr feedback_sub_; // update local data
     MotorDriver* motor_driver_;
 
     void goal_sub_callback(const test_interface::msg::GoalVel::SharedPtr msg)
@@ -36,20 +37,21 @@ private:
         motor_driver_->set_goal(msg->vel);
     }
 
-    void feedback_sub_callback(const can_interface::msg::MotorPresent::SharedPtr msg)
+    void control_timer_callback()
     {
-        motor_driver_->update_vel(msg->present_vel);
-    }
-
-    void timer_callback()
-    {
-
         motor_driver_->write_frame(MotorDriver::tx_frame);
         MotorDriver::send_frame(MotorDriver::tx_frame);
         // RCLCPP_INFO(this->get_logger(), "Present_vel: %f", motor_driver_->present_vel);
         // RCLCPP_INFO(this->get_logger(), "Current_data: %d", data);
         // RCLCPP_INFO(this->get_logger(), "Current: %f", current);
         // RCLCPP_INFO(this->get_logger(), "tx_frame[2] = %d, tx_frame[3] = %d", MotorDriver::tx_frame.data[2], MotorDriver::tx_frame.data[3]);
+    }
+
+    void feedback_timer_callback()
+    {
+        MotorDriver::can_0->get_frame(MotorDriver::rx_frame);
+        auto present_data = motor_driver_->process_rx();
+        motor_driver_->update_vel(present_data.velocity);
     }
 
     void frame_init()
