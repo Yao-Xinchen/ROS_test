@@ -13,7 +13,7 @@
 #define REDUCE_RATIO 36.0f
 
 #define CONTROL_R 1 // ms
-#define FEEDBACK_R 1 // ms 
+#define FEEDBACK_R 1 // ms
 
 class MotorDriver
 {
@@ -22,28 +22,26 @@ public:
     static can_frame rx_frame;
     static CanDriver* can_0;
 
-    MotorDriver(int id, float v2c[2]);
+    MotorDriver(int id, float v2c[3]);
     
     MotorData process_rx();
 
     void set_goal(float vel);
     void update_vel(float vel);
 
-    float write_frame(can_frame &tx_frame);
+    void write_frame(can_frame &tx_frame);
     static void send_frame(const can_frame &tx_frame);
     
-    float goal_vel; //
-    float present_vel;
-
 private:
     int id;
 
-    float v2c_kp, v2c_ki;
-    float proportional, integral;
+    float v2c_kp, v2c_ki, v2c_kd;
+    float proportional, integral, derivative;
 
-    float present_pos;
+    float present_vel;
     
-    float goal_pos;
+    float goal_vel;
+
     float current;
     float vel_error;
 

@@ -13,7 +13,7 @@ class PidController : public rclcpp::Node
 public:
     PidController() : Node("pid_controller")
     {
-        float v2c_params[2] = {0.05, 0.01};
+        float v2c_params[3] = {0.05, 0.01, 0.01};
         motor_driver_ = new MotorDriver(2, v2c_params);
         frame_init();
         control_timer_ = this->create_wall_timer(std::chrono::milliseconds(CONTROL_R), std::bind(&PidController::control_timer_callback, this));

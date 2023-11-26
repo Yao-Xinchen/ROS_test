@@ -8,18 +8,21 @@ can_frame MotorDriver::tx_frame;
 can_frame MotorDriver::rx_frame;
 CanDriver* MotorDriver::can_0 = new CanDriver(0);
 
-MotorDriver::MotorDriver(int id, float v2c[2])
+#define GOAL_VEL 10
+
+MotorDriver::MotorDriver(int id, float v2c[3])
 {
     this->id = id;
 
     this->v2c_kp = v2c[0];
     this->v2c_ki = v2c[1];
+    this->v2c_kd = v2c[2];
 
     proportional = 0;
     integral = 0;
 
     present_vel = 0;
-    goal_vel = 2;
+    goal_vel = GOAL_VEL;
     current = 0;
     vel_error = 0;
 }
@@ -36,29 +39,31 @@ void MotorDriver::update_vel(float vel)
 
 float MotorDriver::vel2current(const float goal_vel)
 {
+    float previous_vel_error = vel_error;
     vel_error = goal_vel - present_vel;
 
     proportional = v2c_kp * vel_error;
     integral += v2c_ki * vel_error * CONTROL_R;
+    derivative = v2c_kd * (vel_error - previous_vel_error) / CONTROL_R;
 
-    current = proportional + integral;
+    current = proportional + integral + derivative;
     // current = proportional;
+
+    if (current > 20) current = 20;
+    else if (current < -20) current = -20;
 
     return current;
 }
 
-float MotorDriver::write_frame(can_frame &tx_frame)
+void MotorDriver::write_frame(can_frame &tx_frame)
 {
     current = vel2current(goal_vel);
-    if (current > 20) current = 20;
-    else if (current < -20) current = -20;
     printf("proportional: %f, present_vel: %f, goal_vel: %f, current: %f\n", proportional, present_vel, goal_vel, current);
 
     int16_t current_data = current / 20 * 16384; // int16_t !!! not uint16_t
 
     tx_frame.data[2*id - 2] = current_data >> 8;
     tx_frame.data[2*id - 1] = current_data & 0xff;
-    return current;
 }
 
 void MotorDriver::send_frame(const can_frame &tx_frame)
@@ -76,7 +81,7 @@ MotorData MotorDriver::process_rx()
 
     present_data.position = (float)pos_raw * ENCODER_ANGLE_RATIO;
     present_data.velocity = (float)vel_raw * 3.1415926f / 30.0f; // rpm to rad/s, 2*pi/60
-    present_data.torque = (float)tor_raw; // actually current, Ampere
+    present_data.torque = (float)tor_raw * 16384 / 20; // actually current, Ampere
 
     return present_data;
 }

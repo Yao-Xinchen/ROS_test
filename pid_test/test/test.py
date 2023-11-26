@@ -12,6 +12,7 @@ with open('data.txt', 'r') as f:
 
 # Convert to DataFrame
 df = pd.DataFrame(data)
+df['velocity_derivative'] = df['present_vel'].diff()
 
 # Plot data
 ax = df.plot()
