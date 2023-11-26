@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(test_interface)
+project(dm_test)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -10,16 +10,25 @@ find_package(ament_cmake REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
-find_package(rosidl_default_generators REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(test_interface REQUIRED)
 
-rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/GoalInt.msg"
-  "msg/GoalVel.msg"
-  "msg/GoalPos.msg"
-  "srv/BasicSrv.srv"
-)
+include_directories(include)
 
-ament_export_dependencies(rosidl_default_runtime)
+add_executable(dm_test_active
+  src/dm_test_active.cpp
+  src/dm_driver.cpp)
+ament_target_dependencies(dm_test_active
+  rclcpp test_interface)
+
+add_executable(dm_test_passive
+  src/dm_test_passive.cpp
+  src/dm_driver.cpp)
+ament_target_dependencies(dm_test_passive
+  rclcpp test_interface)
+
+install(TARGETS dm_test_active dm_test_passive
+  DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
