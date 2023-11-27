@@ -11,10 +11,9 @@
 class PidController : public rclcpp::Node
 {
 public:
-    PidController() : Node("pid_controller")
+    PidController(Params params) : Node("pid_controller")
     {
-        float v2c_params[3] = {0.05, 0.01, 0.01};
-        motor_driver_ = new MotorDriver(2, v2c_params);
+        motor_driver_ = new MotorDriver(2, params);
         frame_init();
         control_timer_ = this->create_wall_timer(std::chrono::milliseconds(CONTROL_R), std::bind(&PidController::control_timer_callback, this));
         feedback_timer_ = this->create_wall_timer(std::chrono::milliseconds(FEEDBACK_R), std::bind(&PidController::feedback_timer_callback, this));
@@ -40,11 +39,9 @@ private:
     void control_timer_callback()
     {
         motor_driver_->write_frame(MotorDriver::tx_frame);
-        MotorDriver::send_frame(MotorDriver::tx_frame);
-        // RCLCPP_INFO(this->get_logger(), "Present_vel: %f", motor_driver_->present_vel);
-        // RCLCPP_INFO(this->get_logger(), "Current_data: %d", data);
-        // RCLCPP_INFO(this->get_logger(), "Current: %f", current);
-        // RCLCPP_INFO(this->get_logger(), "tx_frame[2] = %d, tx_frame[3] = %d", MotorDriver::tx_frame.data[2], MotorDriver::tx_frame.data[3]);
+        for (int i = 0; i < 5; i++) {
+            MotorDriver::send_frame(MotorDriver::tx_frame);
+        }
     }
 
     void feedback_timer_callback()
@@ -65,7 +62,20 @@ private:
 int main(int argc, char **argv)
 {
     rclcpp::init(argc, argv);
-    auto node = std::make_shared<PidController>();
+
+    Params params;
+
+    if (argc != 5) {
+        printf("Usage: %s goal v2c_kp v2c_ki v2c_kd\n", argv[0]);
+        return 1;
+    }
+
+    params.goal = std::stof(argv[1]);
+    params.v2c_kp = std::stof(argv[2]);
+    params.v2c_ki = std::stof(argv[3]);
+    params.v2c_kd = std::stof(argv[4]);
+
+    auto node = std::make_shared<PidController>(params);
     rclcpp::spin(node);
     rclcpp::shutdown();
     return 0;

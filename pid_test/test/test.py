@@ -14,9 +14,13 @@ with open('data.txt', 'r') as f:
 df = pd.DataFrame(data)
 df['velocity_derivative'] = df['present_vel'].diff()
 
+# df = df.drop(columns=['present_vel'])
+
 # Plot data
 ax = df.plot()
 ylim = 75
-ax.set_ylim(-ylim, ylim)
-ax.set_xlim(0, 500)
+# ax.set_ylim(-ylim, ylim)
+# ax.set_xlim(0, 500)
+
+plt.title('PI=(0.05,0,10), Goal=20')
 plt.show()

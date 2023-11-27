@@ -10,8 +10,12 @@ class PidFeedback : public rclcpp::Node
 public:
     PidFeedback() : Node("pid_feedback")
     {
-        float v2c_params[2] = {10, 0.1};
-        motor_driver_ = new MotorDriver(2, v2c_params);
+        Params params;
+        params.goal = 0;
+        params.v2c_kp = 0;
+        params.v2c_ki = 0;
+        params.v2c_kd = 0;
+        motor_driver_ = new MotorDriver(2, params);
         timer_ = this->create_wall_timer(std::chrono::milliseconds(FEEDBACK_R), std::bind(&PidFeedback::timer_callback, this));
         pub_ = this->create_publisher<can_interface::msg::MotorPresent>("motor_present", 10);
     }

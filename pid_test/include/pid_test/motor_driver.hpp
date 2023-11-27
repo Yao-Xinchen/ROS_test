@@ -15,6 +15,14 @@
 #define CONTROL_R 1 // ms
 #define FEEDBACK_R 1 // ms
 
+struct Params
+{
+    float goal;
+    float v2c_kp;
+    float v2c_ki;
+    float v2c_kd;
+};
+
 class MotorDriver
 {
 public:
@@ -22,7 +30,7 @@ public:
     static can_frame rx_frame;
     static CanDriver* can_0;
 
-    MotorDriver(int id, float v2c[3]);
+    MotorDriver(int id, Params params);
     
     MotorData process_rx();
 

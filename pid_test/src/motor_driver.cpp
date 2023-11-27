@@ -8,21 +8,21 @@ can_frame MotorDriver::tx_frame;
 can_frame MotorDriver::rx_frame;
 CanDriver* MotorDriver::can_0 = new CanDriver(0);
 
-#define GOAL_VEL 10
+#define GOAL_VEL 50
 
-MotorDriver::MotorDriver(int id, float v2c[3])
+MotorDriver::MotorDriver(int id, Params params)
 {
     this->id = id;
 
-    this->v2c_kp = v2c[0];
-    this->v2c_ki = v2c[1];
-    this->v2c_kd = v2c[2];
+    v2c_kp = params.v2c_kp;
+    v2c_ki = params.v2c_ki;
+    v2c_kd = params.v2c_kd;
 
     proportional = 0;
     integral = 0;
 
     present_vel = 0;
-    goal_vel = GOAL_VEL;
+    goal_vel = params.goal;
     current = 0;
     vel_error = 0;
 }
@@ -60,10 +60,10 @@ void MotorDriver::write_frame(can_frame &tx_frame)
     current = vel2current(goal_vel);
     printf("proportional: %f, present_vel: %f, goal_vel: %f, current: %f\n", proportional, present_vel, goal_vel, current);
 
-    int16_t current_data = current / 20 * 16384; // int16_t !!! not uint16_t
+    int current_data = current / 20 * 16384; // int16_t !!! not uint16_t
 
-    tx_frame.data[2*id - 2] = current_data >> 8;
-    tx_frame.data[2*id - 1] = current_data & 0xff;
+    tx_frame.data[2*id - 2] = (uint8_t)(current_data >> 8);
+    tx_frame.data[2*id - 1] = (uint8_t)(current_data & 0xff);
 }
 
 void MotorDriver::send_frame(const can_frame &tx_frame)
