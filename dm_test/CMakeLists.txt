@@ -27,7 +27,13 @@ add_executable(dm_test_passive
 ament_target_dependencies(dm_test_passive
   rclcpp test_interface)
 
-install(TARGETS dm_test_active dm_test_passive
+add_executable(dm_start
+  src/dm_start.cpp
+  src/dm_driver.cpp)
+ament_target_dependencies(dm_start
+  rclcpp test_interface)
+
+install(TARGETS dm_test_active dm_test_passive dm_start
   DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)

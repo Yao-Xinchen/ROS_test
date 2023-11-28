@@ -15,7 +15,7 @@ public:
     {
         // count = 0;
         can_driver_ = new CanDriver(0);
-        tx_frame.can_id = 0x200;
+        tx_frame.can_id = 0x001;
         tx_frame.can_dlc = 8;
 
         timer_ = this->create_wall_timer(
@@ -39,14 +39,14 @@ private:
     // uint8_t count;
     void set_frame()
     {
-        tx_frame.data[0] = 0x11;
-        tx_frame.data[1] = 0x11;
-        tx_frame.data[2] = 0x02;
-        tx_frame.data[3] = 0x00;
-        tx_frame.data[4] = 0x11;
-        tx_frame.data[5] = 0x11;
-        tx_frame.data[6] = 0x11;
-        tx_frame.data[7] = 0x11;
+        tx_frame.data[0] = 0xff;
+        tx_frame.data[1] = 0xff;
+        tx_frame.data[2] = 0xff;
+        tx_frame.data[3] = 0xff;
+        tx_frame.data[4] = 0xff;
+        tx_frame.data[5] = 0xff;
+        tx_frame.data[6] = 0xff;
+        tx_frame.data[7] = 0xfc;
     
     }
 };

@@ -25,9 +25,10 @@ void DmDriver::turn_on()
         tx_frame.can_dlc = 0x08;
         memcpy(tx_frame.data, start_cmd, sizeof(start_cmd));
         can_0->send_frame(tx_frame);
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
     }
     can_0->send_frame(tx_frame);
+    printf("turn-on frmae sent\n");
     tx_frame.can_dlc = dlc_temp;
 }
 
@@ -42,18 +43,22 @@ void DmDriver::turn_off()
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
     can_0->send_frame(tx_frame);
+    printf("turn-off frmae sent\n");
     tx_frame.can_dlc = dlc_temp;
 }
 
 DmDriver::~DmDriver()
 {
     turn_off();
+    delete can_0;
+    printf("DmDriver deleted\n");
 }
 
 // ----------------------------------------------------------
 
 DmMitDriver::DmMitDriver(int name, float kp, float kd)
 {
+    printf("DmMitDriver created\n");
     this->motor_id = name;
     set_mode();
     set_param_mit(kp, kd);
