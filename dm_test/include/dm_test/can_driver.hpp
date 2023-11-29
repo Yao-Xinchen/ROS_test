@@ -41,7 +41,7 @@ public:
         close(s);
     }
 
-    void send_frame(can_frame frame)
+    void send_frame(const can_frame &frame)
     {
         auto result = write(s, &frame, sizeof(frame));
         if (result == -1) perror("Error sending CAN frame");

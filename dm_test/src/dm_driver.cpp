@@ -1,6 +1,8 @@
 #include "dm_test/dm_driver.h"
+#include <cstdio>
 
 CanDriver* DmDriver::can_0 = new CanDriver(0);
+can_frame DmDriver::tx_frame;
 
 float DmDriver::uint_to_float(int x_int, float x_min, float x_max, int bits)
 {
@@ -19,30 +21,26 @@ int DmDriver::float_to_uint(float x, float x_min, float x_max, int bits){
 
 void DmDriver::turn_on()
 {
-    uint8_t dlc_temp = tx_frame.can_dlc;
-    for (int i = 10; i > 0; i --) {
-        uint8_t start_cmd[8] = START_CMD;
-        tx_frame.can_dlc = 0x08;
-        memcpy(tx_frame.data, start_cmd, sizeof(start_cmd));
-        can_0->send_frame(tx_frame);
-        std::this_thread::sleep_for(std::chrono::milliseconds(5));
-    }
+    auto frame_temp = tx_frame;
+
+    uint8_t start_cmd[8] = START_CMD;
+    tx_frame.can_dlc = 0x08;
+    memcpy(tx_frame.data, start_cmd, sizeof(start_cmd));
     can_0->send_frame(tx_frame);
-    printf("turn-on frmae sent\n");
-    tx_frame.can_dlc = dlc_temp;
+        
+    printf("turn-on frame sent\n");
+    tx_frame = frame_temp;
 }
 
 void DmDriver::turn_off()
 {
     uint8_t dlc_temp = tx_frame.can_dlc;
-    for (int i = 10; i > 0; i --) {
-        uint8_t stop_cmd[8] = STOP_CMD;
-        tx_frame.can_dlc = 0x08;
-        memcpy(tx_frame.data, stop_cmd, sizeof(stop_cmd));
-        can_0->send_frame(tx_frame);
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    }
+
+    uint8_t stop_cmd[8] = STOP_CMD;
+    tx_frame.can_dlc = 0x08;
+    memcpy(tx_frame.data, stop_cmd, sizeof(stop_cmd));
     can_0->send_frame(tx_frame);
+
     printf("turn-off frmae sent\n");
     tx_frame.can_dlc = dlc_temp;
 }
@@ -72,15 +70,19 @@ void DmMitDriver::set_mode()
 
 void DmMitDriver::set_param_mit(float kp, float kd)
 {
+    float tff = 1;
     uint32_t uint_kp = float_to_uint(kp, KP_MIN, KP_MAX, 12);
     uint32_t uint_kd = float_to_uint(kd, KD_MIN, KD_MAX, 12);
+    uint32_t uint_tff = float_to_uint(tff, -T_MAX, T_MAX, 12);
     tx_frame.data[3] &= 0xf0;
     tx_frame.data[3] |= (uint_kp >> 8) & 0x0f;
     tx_frame.data[4] = uint_kp & 0x0ff;
+    tx_frame.data[5] = uint_kd >> 4;
     tx_frame.data[6] &= 0x0f;
     tx_frame.data[6] |= (uint_kd & 0x0f) << 4;
-    tx_frame.data[5] = uint_kd >> 4;
-    can_0->send_frame(tx_frame);
+    tx_frame.data[6] |= (uint_tff >> 8) & 0x0f;
+    tx_frame.data[7] = uint_tff & 0x0ff;
+    set_velocity(1);
 }
 
 void DmMitDriver::set_velocity(float goal_vel)
@@ -94,10 +96,15 @@ void DmMitDriver::set_velocity(float goal_vel)
 
 void DmMitDriver::set_position(float goal_pos)
 {
-    uint32_t uint_pos = float_to_uint(goal_pos, P_MAX, P_MAX, 16);
+    uint32_t uint_pos = float_to_uint(goal_pos, -P_MAX, P_MAX, 16);
     tx_frame.data[1] = uint_pos & 0x0ff;
     tx_frame.data[0] = uint_pos >> 8;
     can_0->send_frame(tx_frame);
+    printf("frame sent: ");
+    for (int i = 0; i < 8; i++) {
+        printf("%02X ", tx_frame.data[i]);
+    }
+    printf("\n");
 }
 
 // ----------------------------------------------------------

@@ -8,7 +8,7 @@ class DmTestPassive : public rclcpp::Node
 public:
     DmTestPassive() : Node("dm_test_passive")
     {
-        dm_driver_ = new DmMitDriver(1, 0.1, 0.1);
+        dm_driver_ = new DmMitDriver(1, 2, 0.1);
         dm_driver_->turn_on();
         sub_ = this->create_subscription<test_interface::msg::GoalPos>("goal_pos", 10, std::bind(&DmTestPassive::goal_pos_callback, this, std::placeholders::_1));
     }

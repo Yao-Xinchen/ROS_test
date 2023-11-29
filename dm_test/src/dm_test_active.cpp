@@ -9,9 +9,9 @@ public:
     DmTestActive() : Node("dm_test_active")
     {
         printf("node constructed\n");
-        dm_driver_ = new DmMitDriver(1, 1, 0.1);
+        dm_driver_ = new DmMitDriver(1, 2, 0.1);
         dm_driver_->turn_on();
-        timer_ = this->create_wall_timer(std::chrono::milliseconds(400), std::bind(&DmTestActive::timer_callback, this));
+        timer_ = this->create_wall_timer(std::chrono::milliseconds(2000), std::bind(&DmTestActive::timer_callback, this));
     }
 
     ~DmTestActive()
@@ -30,7 +30,7 @@ private:
         goal_pos += PI / 4;
         goal_pos = fmod(goal_pos, 2 * PI);
         dm_driver_->set_position(goal_pos);
-        printf("goal_pos: %f\n", goal_pos);
+        printf("goal_pos: %f\n", goal_pos); 
     }
 };
 

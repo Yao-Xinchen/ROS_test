@@ -28,7 +28,7 @@
 class DmDriver
 {
 public:
-    can_frame tx_frame;
+    static can_frame tx_frame;
     int motor_id;
     virtual ~DmDriver();
     void turn_on();
