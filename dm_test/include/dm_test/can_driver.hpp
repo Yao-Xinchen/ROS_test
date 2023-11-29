@@ -43,7 +43,9 @@ public:
 
     void send_frame(can_frame frame)
     {
-        write(s, &frame, sizeof(frame));
+        auto result = write(s, &frame, sizeof(frame));
+        if (result == -1) perror("Error sending CAN frame");
+        else printf("CAN frame sent\n");
     }
 };
 

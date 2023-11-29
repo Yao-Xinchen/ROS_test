@@ -32,6 +32,7 @@ public:
 
         int bind_result = bind(s, (struct sockaddr *)&addr, sizeof(addr)); // bind the socket to the CAN interface
         if (bind_result == -1) perror("Error binding socket to CAN interface");
+        else printf("Socket bound to CAN interface\n");
     }
 
     ~CanDriver()

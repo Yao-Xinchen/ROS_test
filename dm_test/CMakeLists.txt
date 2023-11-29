@@ -28,8 +28,7 @@ ament_target_dependencies(dm_test_passive
   rclcpp test_interface)
 
 add_executable(dm_start
-  src/dm_start.cpp
-  src/dm_driver.cpp)
+  src/dm_start.cpp)
 ament_target_dependencies(dm_start
   rclcpp test_interface)
 
