@@ -19,6 +19,11 @@ private:
     struct ifreq ifr;
 
 public:
+    /**
+     * @brief Constructor for the CanDriver class.
+     * 
+     * @param port The port number to use for the CAN driver. Default is 0.
+     */
     CanDriver(int port = 0)
     {
         s = socket(PF_CAN, SOCK_RAW, CAN_RAW); // open the CAN socket
@@ -35,12 +40,21 @@ public:
         else printf("Socket bound to CAN interface\n");
     }
 
+    /**
+     * @brief Destructor for the CanDriver class.
+     * 
+     * This destructor closes the socket connection.
+     */
     ~CanDriver()
     {
-        // close the CAN socket
         close(s);
     }
-
+    
+    /**
+     * Sends a CAN frame over the CAN bus.
+     *
+     * @param frame The CAN frame to be sent.
+     */
     void send_frame(const can_frame &frame)
     {
         auto result = write(s, &frame, sizeof(frame));

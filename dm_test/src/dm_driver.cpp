@@ -1,8 +1,11 @@
 #include "dm_test/dm_driver.h"
 #include <cstdio>
 
+/***********************************************
+ * DmDriver is the base class for all drivers.
+ ***********************************************/
+
 CanDriver* DmDriver::can_0 = new CanDriver(0);
-can_frame DmDriver::tx_frame;
 
 float DmDriver::uint_to_float(int x_int, float x_min, float x_max, int bits)
 {
@@ -52,7 +55,9 @@ DmDriver::~DmDriver()
     printf("DmDriver deleted\n");
 }
 
-// ----------------------------------------------------------
+/*************************************************************************************
+ * DmMitDriver is a subclass of DmDriver that represents a specific type of driver.
+ ************************************************************************************/
 
 DmMitDriver::DmMitDriver(int name, float kp, float kd)
 {
@@ -107,7 +112,9 @@ void DmMitDriver::set_position(float goal_pos)
     printf("\n");
 }
 
-// ----------------------------------------------------------
+/*************************************************************************************
+ * DmVelDriver is a subclass of DmDriver that represents a specific type of driver.
+ ************************************************************************************/
 
 DmVelDriver::DmVelDriver(int name)
 {
@@ -130,7 +137,7 @@ void DmVelDriver::set_velocity(float goal_vel)
     can_0->send_frame(tx_frame);
 }
 
-void DmVelDriver::set_position(float goal_pos)
+void DmVelDriver::set_position(float /*goal_pos*/)
 {
     // set_position invalid for velocity mode, do nothing
     return;
