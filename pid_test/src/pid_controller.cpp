@@ -47,8 +47,7 @@ private:
     void feedback_timer_callback()
     {
         MotorDriver::can_0->get_frame(MotorDriver::rx_frame);
-        auto present_data = motor_driver_->process_rx();
-        motor_driver_->update_vel(present_data.velocity);
+        motor_driver_->process_rx();
     }
 
     void frame_init()

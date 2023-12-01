@@ -32,21 +32,19 @@ public:
 
     MotorDriver(int id, Params params);
     
-    MotorData process_rx();
+    void process_rx();
 
     void set_goal(float vel);
-    void update_vel(float vel);
 
     void write_frame(can_frame &tx_frame);
     static void send_frame(const can_frame &tx_frame);
-    
+
+    MotorData present_data;
 private:
     int id;
 
     float v2c_kp, v2c_ki, v2c_kd;
     float proportional, integral, derivative;
-
-    float present_vel;
     
     float goal_vel;
 
