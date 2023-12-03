@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <linux/can.h>
+#include <stdio.h>
 
 can_frame MotorDriver::tx_frame;
 can_frame MotorDriver::rx_frame;
@@ -49,13 +50,19 @@ float MotorDriver::vel2current(const float goal_vel)
     if (current > 20) current = 20;
     else if (current < -20) current = -20;
 
+    // if (vel_error > 0) current = 2;
+    // else if (vel_error < 0) current = 0;
+    // else current = 0;
+
     return current;
 }
 
 void MotorDriver::write_frame(can_frame &tx_frame)
 {
     current = vel2current(goal_vel);
+    freopen("/home/robomaster/data.txt", "a", stdout);
     printf("proportional: %f, present_vel: %f, goal_vel: %f, current: %f\n", proportional, present_data.velocity, goal_vel, current);
+    fclose(stdout);
 
     int current_data = current / 20 * 16384; // int16_t !!! not uint16_t
 
