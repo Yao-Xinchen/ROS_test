@@ -6,6 +6,7 @@
 #include <linux/can.h>
 #include <chrono>
 #include <thread>
+#include <memory>
 
 #include "motor_data.hpp"
 
@@ -28,7 +29,7 @@ class MotorDriver
 public:
     static can_frame tx_frame;
     static can_frame rx_frame;
-    static CanDriver* can_0;
+    static std::unique_ptr<CanDriver> can_0;
 
     MotorDriver(int id, Params params);
     
@@ -36,8 +37,8 @@ public:
 
     void set_goal(float vel);
 
-    void write_frame(can_frame &tx_frame);
-    static void send_frame(const can_frame &tx_frame);
+    void write_frame();
+    static void send_frame();
 
     MotorData present_data;
 private:
@@ -51,7 +52,7 @@ private:
     float current;
     float vel_error;
 
-    float vel2current(const float goal_vel);
+    void vel2current();
 };
 
 #endif // MOTOR_DRIVER_HPP

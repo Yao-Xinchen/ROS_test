@@ -38,9 +38,9 @@ private:
 
     void control_timer_callback()
     {
-        motor_driver_->write_frame(MotorDriver::tx_frame);
+        motor_driver_->write_frame();
         for (int i = 0; i < 5; i++) {
-            MotorDriver::send_frame(MotorDriver::tx_frame);
+            MotorDriver::send_frame();
         }
     }
 

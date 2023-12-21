@@ -7,7 +7,7 @@
 
 can_frame MotorDriver::tx_frame;
 can_frame MotorDriver::rx_frame;
-CanDriver* MotorDriver::can_0 = new CanDriver(0);
+std::unique_ptr<CanDriver> MotorDriver::can_0 = std::make_unique<CanDriver>(0);
 
 #define GOAL_VEL 50
 
@@ -35,7 +35,7 @@ void MotorDriver::set_goal(float vel)
     goal_vel = vel;
 }
 
-float MotorDriver::vel2current(const float goal_vel)
+void MotorDriver::vel2current()
 {
     float previous_vel_error = vel_error;
     vel_error = goal_vel - present_data.velocity;
@@ -44,33 +44,27 @@ float MotorDriver::vel2current(const float goal_vel)
     integral += v2c_ki * vel_error * CONTROL_R;
     derivative = v2c_kd * (vel_error - previous_vel_error) / CONTROL_R;
 
-    current = proportional + integral + derivative;
-    // current = proportional;
+    this->current = proportional + integral + derivative;
 
     if (current > 20) current = 20;
     else if (current < -20) current = -20;
-
-    // if (vel_error > 0) current = 2;
-    // else if (vel_error < 0) current = 0;
-    // else current = 0;
-
-    return current;
 }
 
-void MotorDriver::write_frame(can_frame &tx_frame)
+void MotorDriver::write_frame()
 {
-    current = vel2current(goal_vel);
+    vel2current();
+
     freopen("/home/robomaster/data.txt", "a", stdout);
     printf("proportional: %f, present_vel: %f, goal_vel: %f, current: %f\n", proportional, present_data.velocity, goal_vel, current);
     fclose(stdout);
 
-    int current_data = current / 20 * 16384; // int16_t !!! not uint16_t
+    int16_t current_data = current / 20 * 16384; // int16_t !!! not uint16_t
 
-    tx_frame.data[2*id - 2] = (uint8_t)(current_data >> 8);
-    tx_frame.data[2*id - 1] = (uint8_t)(current_data & 0xff);
+    this->tx_frame.data[2*id - 2] = (uint8_t)(current_data >> 8);
+    this->tx_frame.data[2*id - 1] = (uint8_t)(current_data & 0xff);
 }
 
-void MotorDriver::send_frame(const can_frame &tx_frame)
+void MotorDriver::send_frame()
 {
     can_0->send_frame(tx_frame);
 }
