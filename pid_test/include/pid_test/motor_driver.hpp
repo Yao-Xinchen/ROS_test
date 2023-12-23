@@ -16,9 +16,13 @@
 #define CONTROL_R 1 // ms
 #define FEEDBACK_R 1 // ms
 
+#define V_MAX 1000
+#define I_MAX 20
+
 struct Params
 {
-    float goal;
+    float goal_vel;
+    float goal_pos;
     float v2c_kp;
     float v2c_ki;
     float v2c_kd;
@@ -35,7 +39,7 @@ public:
     
     void process_rx();
 
-    void set_goal(float vel);
+    void set_goal(float vel, float pos);
 
     void write_frame();
     static void send_frame();
@@ -48,11 +52,14 @@ private:
     float proportional, integral, derivative;
     
     float goal_vel;
+    float goal_pos;
 
     float current;
     float vel_error;
+    float pos_error;
 
     void vel2current();
+    void pos2velocity();
 };
 
 #endif // MOTOR_DRIVER_HPP

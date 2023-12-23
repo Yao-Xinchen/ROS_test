@@ -25,14 +25,17 @@ MotorDriver::MotorDriver(int id, Params params)
     present_data.position = 0;
     present_data.velocity = 0;
     present_data.torque = 0;
-    goal_vel = params.goal;
+    goal_vel = params.goal_vel;
+    goal_pos = params.goal_pos;
     current = 0;
     vel_error = 0;
+    pos_error = 0;
 }
 
-void MotorDriver::set_goal(float vel)
+void MotorDriver::set_goal(float vel, float pos)
 {
     goal_vel = vel;
+    goal_pos = pos;
 }
 
 void MotorDriver::vel2current()
@@ -46,19 +49,35 @@ void MotorDriver::vel2current()
 
     this->current = proportional + integral + derivative;
 
-    if (current > 20) current = 20;
-    else if (current < -20) current = -20;
+    if (current > I_MAX) current = I_MAX;
+    else if (current < -I_MAX) current = -I_MAX;
+}
+
+void MotorDriver::pos2velocity()
+{
+    float previous_pos_error = pos_error;
+    pos_error = goal_pos - present_data.position;
+
+    proportional = v2c_kp * pos_error;
+    integral += v2c_ki * pos_error * CONTROL_R;
+    derivative = v2c_kd * (pos_error - previous_pos_error) / CONTROL_R;
+
+    this->goal_vel = proportional + integral + derivative;
+
+    if (goal_vel > V_MAX) goal_vel = V_MAX;
+    else if (goal_vel < -V_MAX) goal_vel = -V_MAX;
 }
 
 void MotorDriver::write_frame()
 {
+    if (goal_pos != 0.0 && goal_vel == 0.0) pos2velocity();
     vel2current();
 
     freopen("/home/robomaster/data.txt", "a", stdout);
     printf("proportional: %f, present_vel: %f, goal_vel: %f, current: %f\n", proportional, present_data.velocity, goal_vel, current);
     fclose(stdout);
 
-    int16_t current_data = current / 20 * 16384; // int16_t !!! not uint16_t
+    int16_t current_data = current / I_MAX * 16384; // int16_t !!! not uint16_t
 
     this->tx_frame.data[2*id - 2] = (uint8_t)(current_data >> 8);
     this->tx_frame.data[2*id - 1] = (uint8_t)(current_data & 0xff);
@@ -79,6 +98,6 @@ void MotorDriver::process_rx()
 
         present_data.position = (float)pos_raw * ENCODER_ANGLE_RATIO;
         present_data.velocity = (float)vel_raw * 3.1415926f / 30.0f; // rpm to rad/s, 2*pi/60
-        present_data.torque = (float)tor_raw * 16384 / 20; // actually current, Ampere
+        present_data.torque = (float)tor_raw * 16384 / I_MAX; // actually current, Ampere
     }
 }

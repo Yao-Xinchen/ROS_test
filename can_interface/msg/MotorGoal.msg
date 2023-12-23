@@ -1,0 +1,2 @@
+float32 goal_pos
+float32 goal_vel

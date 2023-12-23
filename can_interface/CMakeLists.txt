@@ -17,6 +17,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/MotorPresent.msg"
   "srv/MotorPresent.srv"
   "srv/FramePresent.srv"
+  "msg/MotorGoal.msg"
 )
 
 ament_export_dependencies(rosidl_default_runtime)

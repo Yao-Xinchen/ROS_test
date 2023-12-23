@@ -11,7 +11,8 @@ public:
     PidFeedback() : Node("pid_feedback")
     {
         Params params;
-        params.goal = 0;
+        params.goal_vel = 0;
+        params.goal_pos = 0;
         params.v2c_kp = 0;
         params.v2c_ki = 0;
         params.v2c_kd = 0;
