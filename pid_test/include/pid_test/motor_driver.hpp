@@ -23,6 +23,9 @@ struct Params
 {
     float goal_vel;
     float goal_pos;
+    float p2v_kp;
+    float p2v_ki;
+    float p2v_kd;
     float v2c_kp;
     float v2c_ki;
     float v2c_kd;
@@ -49,8 +52,12 @@ private:
     int id;
 
     float v2c_kp, v2c_ki, v2c_kd;
-    float proportional, integral, derivative;
-    
+    float p2v_kp, p2v_ki, p2v_kd;
+    // float proportional, integral, derivative;
+
+    float v2c_p, v2c_i, v2c_d;
+    float p2v_p, p2v_i, p2v_d;
+
     float goal_vel;
     float goal_pos;
 

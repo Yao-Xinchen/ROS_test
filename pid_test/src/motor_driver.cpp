@@ -18,9 +18,16 @@ MotorDriver::MotorDriver(int id, Params params)
     v2c_kp = params.v2c_kp;
     v2c_ki = params.v2c_ki;
     v2c_kd = params.v2c_kd;
+    p2v_kp = params.p2v_kp;
+    p2v_ki = params.p2v_ki;
+    p2v_kd = params.p2v_kd;
 
-    proportional = 0;
-    integral = 0;
+    v2c_p = 0;
+    v2c_i = 0;
+    v2c_d = 0;
+    p2v_p = 0;
+    p2v_i = 0;
+    p2v_d = 0;
 
     present_data.position = 0;
     present_data.velocity = 0;
@@ -43,11 +50,11 @@ void MotorDriver::vel2current()
     float previous_vel_error = vel_error;
     vel_error = goal_vel - present_data.velocity;
 
-    proportional = v2c_kp * vel_error;
-    integral += v2c_ki * vel_error * CONTROL_R;
-    derivative = v2c_kd * (vel_error - previous_vel_error) / CONTROL_R;
+    v2c_p = v2c_kp * vel_error;
+    v2c_i += v2c_ki * vel_error * CONTROL_R;
+    v2c_d = v2c_kd * (vel_error - previous_vel_error) / CONTROL_R;
 
-    this->current = proportional + integral + derivative;
+    this->current = v2c_p + v2c_i + v2c_d;
 
     if (current > I_MAX) current = I_MAX;
     else if (current < -I_MAX) current = -I_MAX;
@@ -58,11 +65,11 @@ void MotorDriver::pos2velocity()
     float previous_pos_error = pos_error;
     pos_error = goal_pos - present_data.position;
 
-    proportional = v2c_kp * pos_error;
-    integral += v2c_ki * pos_error * CONTROL_R;
-    derivative = v2c_kd * (pos_error - previous_pos_error) / CONTROL_R;
+    p2v_p = p2v_kp * pos_error;
+    p2v_i += p2v_ki * pos_error * CONTROL_R;
+    p2v_d = p2v_kd * (pos_error - previous_pos_error) / CONTROL_R;
 
-    this->goal_vel = proportional + integral + derivative;
+    this->goal_vel = p2v_p + p2v_i + p2v_d;
 
     if (goal_vel > V_MAX) goal_vel = V_MAX;
     else if (goal_vel < -V_MAX) goal_vel = -V_MAX;
@@ -70,12 +77,10 @@ void MotorDriver::pos2velocity()
 
 void MotorDriver::write_frame()
 {
-    if (goal_pos != 0.0 && goal_vel == 0.0) pos2velocity();
+    if (goal_pos != 0.0) pos2velocity();
     vel2current();
 
-    freopen("/home/robomaster/data.txt", "a", stdout);
-    printf("proportional: %f, present_vel: %f, goal_vel: %f, current: %f\n", proportional, present_data.velocity, goal_vel, current);
-    fclose(stdout);
+    printf("present_pos: %f, goal_pos: %f, present_vel: %f, goal_vel: %f, current: %f\n", present_data.position, goal_pos, present_data.velocity, goal_vel, current);
 
     int16_t current_data = current / I_MAX * 16384; // int16_t !!! not uint16_t
 
