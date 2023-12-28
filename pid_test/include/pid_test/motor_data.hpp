@@ -2,8 +2,7 @@
 #define MOTOR_DATA_HPP
 
 #include <cmath>
-
-#define ITV 20
+#include <algorithm>
 
 class MotorData
 {
@@ -12,6 +11,10 @@ public:
     float velocity;
     float position;
 
+    /**
+     * @brief Construct a new MotorData object.
+     * Set all the data to zero.
+     */
     MotorData()
     {
         torque = 0;
@@ -19,22 +22,25 @@ public:
         position = 0;
     }
 
+    /**
+     * @brief Update the cumulative position of the motor.
+     * 
+     * @param pos The new feedback position.
+     */
     void update_pos(float pos)
     {
-        // pos is from (0, 360)
-        // calculate the cumulative angle
         int round = std::floor(position / 360);
-        
-        if (std::fmod(position, 360) > 360 - ITV && pos < ITV)
+
+        float up = 360 * (round + 1) + pos;
+        float mid = 360 * round + pos;
+        float down = 360 * (round - 1) + pos;
+
+        auto comparison = [this](float a, float b)
         {
-            position = 360 * (round + 1) + pos;
-        } else if (std::fmod(position, 360) < ITV && pos > 360 - ITV)
-        {
-            position = 360 * (round - 1) + pos;
-        } else
-        {
-            position = 360 * round + pos;
-        }
+            return std::abs(a - position) < std::abs(b - position);
+        };
+
+        position = std::min({up, mid, down}, comparison);
     }
 };
 
