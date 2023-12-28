@@ -29,9 +29,6 @@ MotorDriver::MotorDriver(int id, Params params)
     p2v_i = 0;
     p2v_d = 0;
 
-    present_data.position = 0;
-    present_data.velocity = 0;
-    present_data.torque = 0;
     goal_vel = params.goal_vel;
     goal_pos = params.goal_pos;
     current = 0;
