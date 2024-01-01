@@ -7,7 +7,7 @@ endif()
 
 set(Python3_FIND_STRATEGY "VERSION")
 set(Python3_FIND_VERSION 3.8)
-find_package(Python3 COMPONENTS Development)
+find_package(Python3 COMPONENTS Development Interpreter)
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
@@ -28,11 +28,14 @@ add_executable(unitree_test src/unitree_test.cpp src/unitree_driver.cpp)
 target_link_libraries(unitree_test ${EXTRA_LIBS})
 ament_target_dependencies(unitree_test rclcpp)
 
-set(LIBRARY_OUTPUT_PATH "../lib")
+set(LIBRARY_OUTPUT_PATH "{CMAKE_CURRENT_SOURCE_DIR}/lib")
 add_subdirectory(thirdparty/pybind11)
 pybind11_add_module(unitree_actuator_sdk thirdparty/python_wrapper/wrapper.cpp)
 target_link_libraries(unitree_actuator_sdk PRIVATE ${EXTRA_LIBS})
 set_target_properties(unitree_actuator_sdk PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${LIBRARY_OUTPUT_PATH}")
+
+install(TARGETS unitree_test
+  DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
