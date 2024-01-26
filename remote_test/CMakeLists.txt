@@ -15,12 +15,26 @@ find_package(serial_driver REQUIRED)
 
 include_directories(include)
 
+add_executable(remote_test
+  src/uart_driver.cpp
+  src/remote_test.cpp
+  )
+ament_target_dependencies(remote_test
+  serial_driver
+  )
+
 add_executable(uart_test
   src/uart_test.cpp
-  src/uart_driver.cpp)
+  src/uart_driver.cpp
+  )
 ament_target_dependencies(uart_test
   serial_driver
   )
+
+install(TARGETS
+  uart_test
+  remote_test
+  DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
