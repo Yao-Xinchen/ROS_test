@@ -1,14 +1,15 @@
 #include "remote_test/uart_driver.hpp"
+#include <string>
 
-constexpr const char * UartDriver::dev_name;
 constexpr const char * UartDriver::dev_null;
 constexpr uint32_t UartDriver::baud;
 constexpr FlowControl UartDriver::fc;
 constexpr Parity UartDriver::pt;
 constexpr StopBits UartDriver::sb;
 
-UartDriver::UartDriver()
+UartDriver::UartDriver(std::string dev_name)
 {
+    this->dev_name = dev_name;
     printf("creating uart driver\n");
     IoContext ctx;
     SerialPortConfig config(baud, fc, pt, sb);
@@ -23,17 +24,14 @@ UartDriver::~UartDriver()
     printf("port closed\n");
 }
 
-void UartDriver::send(const std::string & data)
+void UartDriver::send(const std::vector<uint8_t> &data)
 {
     // send serial data
-    std::vector<uint8_t> buffer(data.begin(), data.end());
-    port_->send(buffer);
+    port_->send(data);
 }
 
-void UartDriver::read(std::string &data)
+void UartDriver::read(std::vector<uint8_t> &data)
 {
     // read serial data
-    std::vector<uint8_t> buffer;
-    port_->receive(buffer);
-    data = std::string(buffer.begin(), buffer.end());
+    port_->receive(data);
 }
