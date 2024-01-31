@@ -17,23 +17,29 @@ class UnitreeDriver
 public:
     /**
      * @brief Construct a new UnitreeDriver object.
-     *
      * This constructor initializes a new UnitreeDriver object.
      */
     UnitreeDriver();
 
     /**
+     * @brief Destroy the UnitreeDriver object.
+     * This would send a zero command to the motor.
+     */
+    ~UnitreeDriver();
+
+    /**
      * @brief Set the goal for the motor.
-     *
      * This function sets the goal position and velocity for the motor.
-     *
      * @param pos The goal position for the motor.
      * @param vel The goal velocity for the motor.
-     *
      * @warning The symbols in MotorCmd and MotorData differ from their documentation.
      */
     void set_goal(float pos, float vel);
 
+    /**
+     * @brief Send the goal command and receive the feedback data.
+     * This would send the goal_cmd and overwrite the feedback_data.
+     */
     void send_recv();
 
 private:

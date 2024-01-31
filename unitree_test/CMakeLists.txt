@@ -17,7 +17,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 
 include_directories(include)
-link_directories(lib)
+link_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib)
 if(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "aarch64") 
   set(EXTRA_LIBS libUnitreeMotorSDK_Arm64.so)
 else()
@@ -28,14 +28,28 @@ add_executable(unitree_test src/unitree_test.cpp src/unitree_driver.cpp)
 target_link_libraries(unitree_test ${EXTRA_LIBS})
 ament_target_dependencies(unitree_test rclcpp)
 
+set_target_properties(unitree_test PROPERTIES INSTALL_RPATH "$ORIGIN")
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
 set(LIBRARY_OUTPUT_PATH "{CMAKE_CURRENT_SOURCE_DIR}/lib")
 add_subdirectory(thirdparty/pybind11)
 pybind11_add_module(unitree_actuator_sdk thirdparty/python_wrapper/wrapper.cpp)
 target_link_libraries(unitree_actuator_sdk PRIVATE ${EXTRA_LIBS})
 set_target_properties(unitree_actuator_sdk PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${LIBRARY_OUTPUT_PATH}")
 
+# install(
+#   FILES ${CMAKE_CURRENT_SOURCE_DIR}/lib/libUnitreeMotorSDK_Linux64.so
+#   DESTINATION lib/${PROJECT_NAME}
+# )
 install(TARGETS unitree_test
   DESTINATION lib/${PROJECT_NAME})
+install(
+  DIRECTORY lib/
+  DESTINATION lib/${PROJECT_NAME}
+)
+# install(TARGETS unitree_test
+#   RUNTIME DESTINATION lib/${PROJECT_NAME}
+# )
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
